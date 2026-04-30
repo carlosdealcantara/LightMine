@@ -4,7 +4,7 @@
 
 [Setup]
 AppName=LightMine
-AppVersion=1.2
+AppVersion=1.2.1
 AppPublisher=Sorlac
 PrivilegesRequired=admin
 DefaultDirName={commonappdata}\LightMine
