@@ -1,0 +1,184 @@
+; ##########################################################################
+; # LightMine - Distributed Solo Mining Agent (v1.2 Polished)
+; ##########################################################################
+
+[Setup]
+AppName=LightMine
+AppVersion=1.2
+AppPublisher=Sorlac
+PrivilegesRequired=admin
+DefaultDirName={commonappdata}\LightMine
+DefaultGroupName=LightMine
+OutputDir=.
+OutputBaseFilename=LightMine_Setup
+Compression=lzma
+SolidCompression=yes
+
+[Languages]
+Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
+
+[Files]
+Source: "src\LightMine.exe"; DestDir: "{commonappdata}\LightMine"; Flags: ignoreversion
+
+[Code]
+var
+  UserName, BestDifficulty, Checksum: string;
+  WorkerIdFilePath, DifficultyFilePath, ChecksumFilePath, LogFilePath: string;
+  BackupWorkerIdFilePath: string;
+  InputPage: TInputQueryWizardPage;
+
+procedure LogToFile(Msg: string);
+var
+  LogStrings: TStringList;
+begin
+  LogStrings := TStringList.Create;
+  try
+    if FileExists(LogFilePath) then
+      LogStrings.LoadFromFile(LogFilePath);
+    LogStrings.Add(GetDateTimeString('yyyy/mm/dd hh:nn:ss', '-', ':') + ' - ' + Msg);
+    LogStrings.SaveToFile(LogFilePath);
+  finally
+    LogStrings.Free;
+  end;
+end;
+
+// Função avançada para normalizar o nome (remove acentos e espaços)
+function CleanWorkerName(S: string): string;
+var
+  I: Integer;
+  C: Char;
+  Res: string;
+begin
+  Res := '';
+  for I := 1 to Length(S) do
+  begin
+    C := S[I];
+    case C of
+      'á','à','ã','â','ä': Res := Res + 'a';
+      'Á','À','Ã','Â','Ä': Res := Res + 'A';
+      'é','è','ê','ë': Res := Res + 'e';
+      'É','È','Ê','Ë': Res := Res + 'E';
+      'í','ì','î','ï': Res := Res + 'i';
+      'Í','Ì','Î','Ï': Res := Res + 'I';
+      'ó','ò','õ','ô','ö': Res := Res + 'o';
+      'Ó','Ò','Õ','Ô','Ö': Res := Res + 'O';
+      'ú','ù','û','ü': Res := Res + 'u';
+      'Ú','Ù','Û','Ü': Res := Res + 'U';
+      'ç': Res := Res + 'c';
+      'Ç': Res := Res + 'C';
+      'a'..'z', 'A'..'Z', '0'..'9': Res := Res + C;
+    end;
+  end;
+  Result := Res;
+end;
+
+function CalculateChecksum(Data: string): string;
+var
+  Sum, I: Integer;
+begin
+  Sum := 0;
+  for I := 1 to Length(Data) do
+    Sum := Sum + Ord(Data[I]);
+  Result := IntToStr(Sum);
+end;
+
+procedure InitializeWizard;
+var
+  UserStrings: TStringList;
+begin
+  WorkerIdFilePath := ExpandConstant('{commonappdata}\LightMine\UserName.txt');
+  DifficultyFilePath := ExpandConstant('{commonappdata}\LightMine\BestDifficulty.txt');
+  ChecksumFilePath := ExpandConstant('{commonappdata}\LightMine\Checksum.txt');
+  LogFilePath := ExpandConstant('{commonappdata}\LightMine\InstallLog.txt');
+  BackupWorkerIdFilePath := ExpandConstant('{commonappdata}\LightMine\Backup_UserName.txt');
+
+  if FileExists(WorkerIdFilePath) or FileExists(BackupWorkerIdFilePath) then
+  begin
+    UserStrings := TStringList.Create;
+    try
+      if FileExists(WorkerIdFilePath) then
+      begin
+        try
+          UserStrings.LoadFromFile(WorkerIdFilePath);
+          UserName := UserStrings[0];
+        except
+        end;
+      end;
+      if (UserName = '') and FileExists(BackupWorkerIdFilePath) then
+      begin
+        UserStrings.LoadFromFile(BackupWorkerIdFilePath);
+        UserName := UserStrings[0];
+      end;
+    finally
+      UserStrings.Free;
+    end;
+  end;
+
+  if UserName = '' then
+  begin
+    InputPage := CreateInputQueryPage(wpWelcome, 'Configuração LightMine', 'Identificação do Minerador', 'Por favor, insira seu nome de usuário:');
+    InputPage.Add('Nome de Usuário/Worker:', False);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  BatFilePath, VbsFilePath: string;
+  BatFileContent, VbsFileContent: string;
+  UserStrings, DifficultyStrings, ChecksumStrings: TStringList;
+  FinalWorkerName: string;
+begin
+  if CurStep = ssInstall then
+  begin
+    if not DirExists(ExpandConstant('{commonappdata}\LightMine')) then
+      CreateDir(ExpandConstant('{commonappdata}\LightMine'));
+
+    if UserName = '' then
+      UserName := InputPage.Values[0];
+    
+    FinalWorkerName := CleanWorkerName(UserName);
+    LogToFile('Normalização de Worker: ' + UserName + ' -> ' + FinalWorkerName);
+
+    UserStrings := TStringList.Create;
+    try
+      UserStrings.Add(UserName);
+      UserStrings.SaveToFile(WorkerIdFilePath);
+      UserStrings.SaveToFile(BackupWorkerIdFilePath);
+    finally
+      UserStrings.Free;
+    end;
+
+    BestDifficulty := '123';
+    Checksum := CalculateChecksum(BestDifficulty);
+    DifficultyStrings := TStringList.Create;
+    ChecksumStrings := TStringList.Create;
+    try
+      DifficultyStrings.Add(BestDifficulty);
+      ChecksumStrings.Add(Checksum);
+      DifficultyStrings.SaveToFile(DifficultyFilePath);
+      ChecksumStrings.SaveToFile(ChecksumFilePath);
+    finally
+      DifficultyStrings.Free;
+      ChecksumStrings.Free;
+    end;
+
+    // Conteúdo do .bat atualizado para LightMine.exe
+    BatFileContent := '@echo off' + #13#10 +
+                      'cd /d "' + ExpandConstant('{commonappdata}\LightMine') + '"' + #13#10 +
+                      'title LightMine Engine' + #13#10 +
+                      'LightMine.exe -a sha256d -o stratum+tcp://public-pool.io:21496 -u bc1qr87ft6r32gsjzrauddxk77x5upxylax277dz27.' + FinalWorkerName + ' -p x -t 1';
+    
+    VbsFileContent := 'Set WshShell = CreateObject("WScript.Shell")' + #13#10 +
+                      'WshShell.Run """' + ExpandConstant('{commonappdata}\LightMine\LightMine.bat') + '""", 0, False' + #13#10 +
+                      'Set WshShell = Nothing';
+
+    BatFilePath := ExpandConstant('{commonappdata}\LightMine\LightMine.bat');
+    VbsFilePath := ExpandConstant('{commonstartup}\LightMine.vbs');
+    
+    SaveStringToFile(BatFilePath, BatFileContent, False);
+    SaveStringToFile(VbsFilePath, VbsFileContent, False);
+  end;
+end;
+
+[Run]
+Filename: "wscript.exe"; Parameters: """{commonstartup}\LightMine.vbs"""; Description: "Iniciar LightMine agora em segundo plano"; Flags: nowait postinstall skipifsilent

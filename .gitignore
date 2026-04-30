@@ -1,0 +1,17 @@
+# Arquivos de Build do Inno Setup
+Output/
+*.exe
+
+# Mas queremos manter o motor do minerador, então removemos a regra para ele:
+!src/LightMine.exe
+
+# Arquivos temporários do Windows
+Thumbs.db
+Desktop.ini
+
+# Logs de instalação locais
+InstallLog.txt
+UserName.txt
+Backup_UserName.txt
+BestDifficulty.txt
+Checksum.txt
