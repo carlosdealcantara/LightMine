@@ -4,7 +4,7 @@
 
 [Setup]
 AppName=LightMine
-AppVersion=1.2.2
+AppVersion=1.2.3
 AppPublisher=Sorlac
 PrivilegesRequired=admin
 DefaultDirName={commonappdata}\LightMine
@@ -22,9 +22,8 @@ Source: "src\LightMine.exe"; DestDir: "{commonappdata}\LightMine"; Flags: ignore
 
 [Code]
 var
-  UserName, BestDifficulty, Checksum: string;
-  WorkerIdFilePath, DifficultyFilePath, ChecksumFilePath, LogFilePath: string;
-  BackupWorkerIdFilePath: string;
+  UserName: string;
+  WorkerIdFilePath, LogFilePath: string;
   InputPage: TInputQueryWizardPage;
 
 procedure LogToFile(Msg: string);
@@ -72,42 +71,23 @@ begin
   Result := Res;
 end;
 
-function CalculateChecksum(Data: string): string;
-var
-  Sum, I: Integer;
-begin
-  Sum := 0;
-  for I := 1 to Length(Data) do
-    Sum := Sum + Ord(Data[I]);
-  Result := IntToStr(Sum);
-end;
+
 
 procedure InitializeWizard;
 var
   UserStrings: TStringList;
 begin
   WorkerIdFilePath := ExpandConstant('{commonappdata}\LightMine\UserName.txt');
-  DifficultyFilePath := ExpandConstant('{commonappdata}\LightMine\BestDifficulty.txt');
-  ChecksumFilePath := ExpandConstant('{commonappdata}\LightMine\Checksum.txt');
   LogFilePath := ExpandConstant('{commonappdata}\LightMine\InstallLog.txt');
-  BackupWorkerIdFilePath := ExpandConstant('{commonappdata}\LightMine\Backup_UserName.txt');
 
-  if FileExists(WorkerIdFilePath) or FileExists(BackupWorkerIdFilePath) then
+  if FileExists(WorkerIdFilePath) then
   begin
     UserStrings := TStringList.Create;
     try
-      if FileExists(WorkerIdFilePath) then
-      begin
-        try
-          UserStrings.LoadFromFile(WorkerIdFilePath);
-          UserName := UserStrings[0];
-        except
-        end;
-      end;
-      if (UserName = '') and FileExists(BackupWorkerIdFilePath) then
-      begin
-        UserStrings.LoadFromFile(BackupWorkerIdFilePath);
+      try
+        UserStrings.LoadFromFile(WorkerIdFilePath);
         UserName := UserStrings[0];
+      except
       end;
     finally
       UserStrings.Free;
@@ -125,7 +105,7 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   BatFilePath, VbsFilePath: string;
   BatFileContent, VbsFileContent: string;
-  UserStrings, DifficultyStrings, ChecksumStrings: TStringList;
+  UserStrings: TStringList;
   FinalWorkerName: string;
 begin
   if CurStep = ssInstall then
@@ -143,24 +123,11 @@ begin
     try
       UserStrings.Add(UserName);
       UserStrings.SaveToFile(WorkerIdFilePath);
-      UserStrings.SaveToFile(BackupWorkerIdFilePath);
     finally
       UserStrings.Free;
     end;
 
-    BestDifficulty := '123';
-    Checksum := CalculateChecksum(BestDifficulty);
-    DifficultyStrings := TStringList.Create;
-    ChecksumStrings := TStringList.Create;
-    try
-      DifficultyStrings.Add(BestDifficulty);
-      ChecksumStrings.Add(Checksum);
-      DifficultyStrings.SaveToFile(DifficultyFilePath);
-      ChecksumStrings.SaveToFile(ChecksumFilePath);
-    finally
-      DifficultyStrings.Free;
-      ChecksumStrings.Free;
-    end;
+
 
     // Conteúdo do .bat atualizado para LightMine.exe
     BatFileContent := '@echo off' + #13#10 +
