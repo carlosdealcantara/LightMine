@@ -1,4 +1,4 @@
-# 💎 LightMine v1.2.1
+# 💎 LightMine v1.2.2
 
 **LightMine** é um agente de mineração solo de Bitcoin (SHA-256) projetado para ser extremamente leve, transparente e de fácil distribuição. O projeto foi desenvolvido com foco na experiência do usuário, permitindo que qualquer pessoa contribua para a rede Bitcoin sem comprometer a performance do seu computador no dia a dia.
 
