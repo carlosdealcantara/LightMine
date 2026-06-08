@@ -2,15 +2,17 @@
 ; # LightMine - Distributed Solo Mining Agent (v1.2 Polished)
 ; ##########################################################################
 
+#define MyAppVersion "1.2.5"
+
 [Setup]
 AppName=LightMine
-AppVersion=1.2.5
+AppVersion={#MyAppVersion}
 AppPublisher=Sorlac
 PrivilegesRequired=admin
 DefaultDirName={commonappdata}\LightMine
 DefaultGroupName=LightMine
 OutputDir=.
-OutputBaseFilename=LightMine_Setup_v1.2.5
+OutputBaseFilename=LightMine_Setup_v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 
