@@ -4,13 +4,13 @@
 
 [Setup]
 AppName=LightMine
-AppVersion=1.2.3
+AppVersion=1.2.5
 AppPublisher=Sorlac
 PrivilegesRequired=admin
 DefaultDirName={commonappdata}\LightMine
 DefaultGroupName=LightMine
 OutputDir=.
-OutputBaseFilename=LightMine_Setup
+OutputBaseFilename=LightMine_Setup_v1.2.5
 Compression=lzma
 SolidCompression=yes
 
@@ -19,6 +19,10 @@ Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 
 [Files]
 Source: "src\LightMine.exe"; DestDir: "{commonappdata}\LightMine"; Flags: ignoreversion
+
+[UninstallDelete]
+Type: files; Name: "{commonstartup}\LightMine.vbs"
+Type: filesandordirs; Name: "{commonappdata}\LightMine"
 
 [Code]
 var
